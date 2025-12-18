@@ -22,23 +22,29 @@ ChartJS.register(
   Legend
 );
 
-const BarChart = () => {
+const BarChart = ({user,analytical,analyticEval}) => {
 
   const [responseData, setResponseData] = useState([])
-
+  // const [dataSets, setdataSets] = useState({})
+console.log(user)
+console.log(analytical)
+console.log(analyticEval)
   useEffect(() => {
-    try {
-      async function fetchData() {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/analytic/getadminanalytics`);
-        setResponseData(response.data)
-      }
-      fetchData();
-    } catch (error) {
-      toast.error(error?.message)
-    }
-  }, []);
+    // try {
+    //   async function fetchData() {
+    //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/analytic/getadminanalytics`);
+    //     setResponseData(response.data)
+    //   }
+    //   fetchData();
+    // } catch (error) {
+    //   toast.error(error?.message)
+    // }
 
-  const dataSets = {
+   setResponseData(analytical)
+  }, [analytical]);
+
+ 
+     const dataSets = {
     Users: { labels: ["Admin", "Evaluator", "Moderator"], data: [responseData.totalUsers] },
     Tasks: {
       labels: ["Pending", "Completed", "In Progress"],
@@ -51,6 +57,13 @@ const BarChart = () => {
     // ResultGenerated: { labels: ["Results Generated"], data: [100] },
     // ScannedData: { labels: ["Scanned Data"], data: [150] },
   };
+  
+
+ 
+  // console.log(dataSets)
+
+
+
 
   const labels = Object.keys(dataSets);
   
@@ -58,7 +71,7 @@ const BarChart = () => {
   const processedData = labels.map((category) =>
     dataSets[category].data.reduce((acc, val) => acc + val, 0)
 );
-console.log(processedData)
+// console.log(processedData)
 
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -80,6 +93,7 @@ console.log(processedData)
     return () => {
       observer.disconnect();
     };
+
   }, []);
 
   // Bar chart data

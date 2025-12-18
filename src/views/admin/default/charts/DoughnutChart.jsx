@@ -1,103 +1,127 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Title, Tooltip, Legend } from "chart.js";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// Register necessary chart elements with Chart.js
 ChartJS.register(ArcElement, Title, Tooltip, Legend);
 
-const COLORS = [
-  "rgba(255, 99, 132, 0.6)",
-  "rgba(54, 162, 235, 0.6)",
-  "rgba(255, 206, 86, 0.6)",
-  "rgba(75, 192, 192, 0.6)",
-  "rgba(153, 102, 255, 0.6)",
-];
-
-const BORDER_COLORS = COLORS.map(c => c.replace("0.6", "1"));
-
-const DoughnutChart = ({ arr = [], val = [] }) => {
+const DoughnutChart = ({ arr, val }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [apiData, setApiData] = useState({ labels: [], values: [] });
+  const [responseData, setResponseData] = useState([]);
+  const [arrdata, setArrdata] = useState([]);
+  const [valdata, setValdata] = useState([]);
 
-  /* ---------------- Fetch Default Data ---------------- */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(
+        const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/analytic/getadminanalytics`
         );
+        const responseData = response.data;
+        console.log(responseData)
 
-        const usersByRole = res?.data?.usersByRole;
-        if (usersByRole) {
-          setApiData({
-            labels: Object.keys(usersByRole),
-            values: Object.values(usersByRole),
-          });
+        if (responseData?.usersByRole) {
+          const arrr = Object.keys(responseData.usersByRole);
+          const vall = Object.values(responseData.usersByRole);
+
+          setArrdata(arrr);
+          setValdata(vall);
         }
-      } catch (err) {
-        toast.error(err?.message || "Failed to load analytics");
+      } catch (error) {
+        toast.error(error?.message);
       }
     };
 
     fetchData();
-  }, []);
+  }, []); // Run only once when component mounts
 
-  /* ---------------- Dark Mode Watcher ---------------- */
   useEffect(() => {
-    const observer = new MutationObserver(() => {
+    const checkDarkMode = () => {
       setIsDarkMode(document.body.classList.contains("dark"));
-    });
+    };
 
+    // Initial check on mount
+    checkDarkMode();
+
+    // Add event listener for theme changes
+    const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.body, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
-  /* ---------------- Final Data Source ---------------- */
-  const labels = arr.length ? arr : apiData.labels.length ? apiData.labels : ["Loading"];
-  const values = val.length ? val : apiData.values.length ? apiData.values : [1];
-
-  /* ---------------- Memoized Chart Data ---------------- */
-  const data = useMemo(() => ({
-    labels,
+  // Doughnut chart data
+  const data = {
+    labels:
+      arr.length <= 0
+        ? arrdata.length <= 0
+          ? ["Loading..."]
+          : arrdata
+        : arr, // Labels for the chart
     datasets: [
       {
-        data: values,
-        backgroundColor: labels.map((_, i) => COLORS[i % COLORS.length]),
-        borderColor: labels.map((_, i) => BORDER_COLORS[i % BORDER_COLORS.length]),
+        // here i take data from parent component (arr, val). but these data comes when parent component handleBoxClick() is called on click action. so initially until user click on any box i use useeffect to fetch user data and show it default data initially (arrdata, valdata)  the working of arr, val in parent component is same arrdata, valdata which is used in this component.
+
+        data:
+          val.length <= 0 ? (valdata.length <= 0 ? [5, 5, 5] : valdata) : val, // Values for the chart
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)", // Red
+          "rgba(54, 162, 235, 0.6)", // Blue
+          "rgba(255, 206, 86, 0.6)", // Yellow
+          "rgba(75, 192, 192, 0.6)", // Green
+          "rgba(153, 102, 255, 0.6)", // Purple
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(153, 102, 255, 1)",
+        ],
         borderWidth: 1,
-        hoverOffset: 20,
+        hoverOffset: 20, // Border width for the segments
       },
     ],
-  }), [labels, values]);
+  };
 
-  /* ---------------- Memoized Options ---------------- */
-  const options = useMemo(() => ({
+  // Doughnut chart options with dark mode
+  const options = {
     responsive: true,
     plugins: {
       legend: {
         position: "bottom",
         labels: {
-          font: { size: 14 },
-          color: isDarkMode ? "#fff" : "#000",
+          font: {
+            size: 14,
+          },
+          color: isDarkMode ? "white" : "black",
         },
       },
       title: {
         display: true,
         text: "Category-Wise Distribution",
-        font: { size: 18 },
-        color: isDarkMode ? "#fff" : "#000",
+        font: {
+          size: 18,
+        },
+        color: isDarkMode ? "white" : "black",
+      },
+      animation: {
+        duration: 300, // Controls animation duration (in milliseconds)
+        easing: "easeOutQuart", // Easing function for smooth transitions
+      },
+      hover: {
+        mode: "nearest", // Interaction mode for hovering
+        animationDuration: 300, // Duration of the hover animation
       },
     },
-    animation: {
-      duration: 300,
-      easing: "easeOutQuart",
-    },
-  }), [isDarkMode]);
+  };
 
   return <Doughnut data={data} options={options} />;
 };
