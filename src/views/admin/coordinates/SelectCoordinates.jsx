@@ -113,8 +113,8 @@ const SelectCoordinates = () => {
         );
         setQuestionDone(response?.data);
       } catch (error) {
-        console.log(error);
-        toast.error(error?.response?.data?.message);
+        // console.log(error);
+        // toast.error(error?.response?.data?.message);
       }
     };
     fetchedData();
@@ -358,7 +358,7 @@ const SelectCoordinates = () => {
           },
         }
       );
-      console.log(response?.data?.data);
+      // console.log(response?.data?.data);
       toggleInputsVisibility(folderId);
       const subQuestionsNumber =
         Number(response?.data?.data?.parentQuestion?.numberOfSubQuestions) || 0;
@@ -403,10 +403,10 @@ const SelectCoordinates = () => {
   // console.log(getSubjectbyIdData);
 
   const handleFinalSubmitButton = async () => {
-    if (filterOutQuestionDone.length != folders.length) {
-      toast.error("Please select all questions images & answers images");
-      return;
-    }
+    // if (filterOutQuestionDone.length != folders.length) {
+    //   toast.error("Please select all questions images & answers images");
+    //   return;
+    // }
     try {
       const updatedData = new FormData();
 
